@@ -1,6 +1,26 @@
 import { useState } from "react"
 import { ethers } from "ethers"
 
+const [address, setAddress] = useState("")
+
+async function getWallet(){
+
+if(window.ethereum){
+
+const provider = new ethers.providers.Web3Provider(window.ethereum)
+
+const accounts = await provider.listAccounts()
+
+if(accounts.length > 0){
+
+setAddress(accounts[0])
+
+}
+
+}
+
+}
+
 export default function ConnectWallet(){
 
 const [wallet,setWallet] = useState("Not connected")
