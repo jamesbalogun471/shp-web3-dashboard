@@ -50,16 +50,18 @@ export default function NFTDashboard() {
         return;
       }
 
-      const url = `https://eth-sepolia.g.alchemy.com/v2/${API_KEY}/getNFTs?owner=${address}`;
+const url = `https://eth-sepolia.g.alchemy.com/nft/v3/${API_KEY}/getNFTsForOwner?owner=${address}`;
+      
       setLoading(true);
 
       const res = await axios.get(url);
+console.log("NFT RESPONSE:", res.data);
       setNFTs(res.data.ownedNfts || []);
     } catch (error) {
-      console.error(error);
-      alert("Failed to load NFTs");
-      setNFTs([]);
-    } finally {
+  console.error("FULL ERROR:", error);
+  console.error("RESPONSE:", error.response);
+  alert("Failed to load NFTs");
+}finally {
       setLoading(false);
     }
   }
