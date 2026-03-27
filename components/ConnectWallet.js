@@ -1,58 +1,52 @@
-import { useState } from "react"
-import { ethers } from "ethers"
+"use client";
 
-const [address, setAddress] = useState("")
+import { useState, useEffect } from "react";
+import { ethers } from "ethers";
 
-async function getWallet(){
+export default function ConnectWallet() {
 
-if(window.ethereum){
+  const [address, setAddress] = useState("");
 
-const provider = new ethers.providers.Web3Provider(window.ethereum)
+  // Auto check if already connected
+  async function getWallet() {
+    if (window.ethereum) {
 
-const accounts = await provider.listAccounts()
+      const provider = new ethers.providers.Web3Provider(window.ethereum);
 
-if(accounts.length > 0){
+      const accounts = await provider.listAccounts();
 
-setAddress(accounts[0])
+      if (accounts.length > 0) {
+        setAddress(accounts[0]);
+      }
+    }
+  }
 
-}
+  // Connect button
+  async function connect() {
+    if (window.ethereum) {
 
-}
+      const provider = new ethers.providers.Web3Provider(window.ethereum);
 
-}
+      const accounts = await provider.send("eth_requestAccounts", []);
 
-export default function ConnectWallet(){
+      setAddress(accounts[0]);
+    }
+  }
 
-const [wallet,setWallet] = useState("Not connected")
+  // Run on page load
+  useEffect(() => {
+    getWallet();
+  }, []);
 
-async function connect(){
+  return (
+    <div>
+      <button onClick={connect}>
+        Connect Wallet
+      </button>
 
-if(window.ethereum){
-
-const provider = new ethers.providers.Web3Provider(window.ethereum)
-
-await provider.send("eth_requestAccounts",[])
-
-const signer = provider.getSigner()
-
-const address = await signer.getAddress()
-
-setWallet(address)
-
-}
-
-}
-
-return(
-
-<div>
-
-<button onClick={connect}>Connect Wallet</button>
-
-<p>{wallet}</p>
-
-</div>
-
-)
-
+      <p>
+        {address ? address : "Not connected"}
+      </p>
+    </div>
+  );
 }

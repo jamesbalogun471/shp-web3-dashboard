@@ -1,55 +1,124 @@
-import { useState } from "react"
-import axios from "axios"
+import axios from "axios";
+import { ethers } from "ethers";
+import { useState, useEffect } from "react";
 
-export default function NFTDashboard(){
+export default function NFTDashboard() {
 
-const [address,setAddress] = useState("")
-const [nfts,setNFTs] = useState([])
 
-const API_KEY = "lX9sTXDNkUbZKjJ62un0T"
 
-async function loadNFTs(){
+  const [address, setAddress] = useState("");
+  const [nfts, setNFTs] = useState([]);
+  const [loading, setLoading] = useState(false); 
 
-const url = `https://eth-sepolia.g.alchemy.com/v2/${API_KEY}/getNFTs?owner=${address}`
+useEffect(() => {
 
-const res = await axios.get(url)
+  if (!window.ethereum) return;
 
-setNFTs(res.data.ownedNfts)
+  const handleAccountsChanged = (accounts) => {
+    if (accounts.length === 0) {
+      setAddress(""); // user disconnected
+    } else {
+      setAddress(accounts[0]);
+    }
+  };
 
-}
+  window.ethereum.on("accountsChanged", handleAccountsChanged);
 
-return(
 
-<div>
+  return () => {
+    window.ethereum.removeListener("accountsChanged", handleAccountsChanged);
+  };
 
-<h2>NFT Dashboard</h2>
+}, []);
 
-<input
-placeholder="Enter wallet address"
-onChange={(e)=>setAddress(e.target.value)}
-/>
+  const API_KEY = "lX9sTXDNkUbZKjJ62un0T";
 
-<button onClick={loadNFTs}>Load NFTs</button>
+  async function loadNFTs() {
 
-<div>
+    if (!address) {
+      alert("Please enter a wallet address");
+      return;
+    }
 
-{nfts.map((nft,index)=>(
-<div key={index}>
+ if (!window.ethereum) {
+      alert("MetaMask not installed");
+      return;
+    }
 
-<img
-src={nft.media[0]?.gateway}
-width="150"
-/>
+const provider = new ethers.BrowserProvider(window.ethereum);
+    const network = await provider.getNetwork();
 
-<p>{nft.title}</p>
+    if (Number(network.chainId) !== 11155111) {
+      alert("Switch to Sepolia Network");
+      return;
+    }
 
-</div>
-))}
 
-</div>
 
-</div>
+    const url = `https://eth-sepolia.g.alchemy.com/v2/${API_KEY}/getNFTs?owner=${address}`;
 
-)
+    setLoading(true);
 
+    try {
+
+      const res = await axios.get(url);
+      setNFTs(res.data.ownedNfts || []);
+
+    } catch (error) {
+
+      console.error(error);
+      alert("Failed to load NFTs");
+
+    }
+
+    setLoading(false);
+  }
+
+  return (
+    <div>
+
+      <h2>NFT Dashboard</h2>
+
+      <input
+        placeholder="Enter wallet address"
+        value={address}
+        onChange={(e) => setAddress(e.target.value)}
+      />
+
+      <button onClick={loadNFTs}>
+        Load NFTs
+      </button>
+
+      <div>
+
+       
+        {loading && <p>Loading NFTs...</p>}
+
+        {!loading && nfts.length === 0 && <p>No NFTs found</p>}
+
+        {nfts.map((nft, index) => {
+
+          const image = nft.media?.[0]?.gateway;
+
+          return (
+            <div key={index}>
+
+              {image && (
+                <img
+                  src={image}
+                  width="150"
+                  alt="NFT"
+                />
+              )}
+
+              <p>{nft.title || "No Title"}</p>
+
+            </div>
+          );
+        })}
+
+      </div>
+
+    </div>
+  );
 }
